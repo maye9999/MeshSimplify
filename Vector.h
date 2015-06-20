@@ -39,6 +39,11 @@ struct Vector
 		double sq = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 		return Vector(v[0] / sq, v[1] / sq, v[2] / sq);
 	}
+	static const double distance(const Vector& lhs, const Vector& rhs)
+	{
+		Vector v = lhs - rhs;
+		return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+	}
 };
 
 inline const Vector operator+(const Vector& lhs, const Vector& rhs)
