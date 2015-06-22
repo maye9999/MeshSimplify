@@ -69,21 +69,23 @@ struct Edge
 		assert(vertices_pool[vertices_id[0]].enable);
 		assert(vertices_pool[vertices_id[1]].enable);
 		Matrix m = vertices_pool[vertices_id[0]].q + vertices_pool[vertices_id[1]].q;
-		m(1, 0) = m(0, 1);
-		m(2, 0) = m(0, 2);
-		m(2, 1) = m(1, 2);
+// 		m(1, 0) = m(0, 1);
+// 		m(2, 0) = m(0, 2);
+// 		m(2, 1) = m(1, 2);
 		m(3, 0) = m(3, 1) = m(3, 2) = 0.0;
 		m(3, 3) = 1.0;
 		Matrix im = Matrix::invert(m);
 		Vector res = Matrix::mul(im, Vector(0, 0, 0, 1));
 		Vector v1 = vertices_pool[vertices_id[0]].pos, v2 = vertices_pool[vertices_id[1]].pos;
-		if(fabs(res[3] - 1.0) > 1E-5)
+		if(_isnan(res[0]) || _isnan(res[1]) || _isnan(res[2]))
+			v_mid = 0.5 * (v1 + v2);
+		else if(fabs(res[3] - 1.0) > 1E-5)
 			v_mid = 0.5 * (v1 + v2);
 		else if(Vector::distance(v1, res) + Vector::distance(v2, res) > 2.0 * Vector::distance(v1, v2))
 			v_mid = 0.5 * (v1 + v2);
 		else
 			v_mid = res;
-		//v_mid = 0.5 * (v1 + v2);
+		v_mid = 0.5 * (v1 + v2);
 	}
 
 	// invoke updateNewPoint() First!
@@ -183,6 +185,7 @@ void Edge::updateErr()
 	for(int j = 0; j < 2; ++j)
 		for(int i : vertices_pool[vertices_id[j]].faces_id)
 			err += Matrix::mul(v_mid, faces_pool[i].kp) * v_mid;
+	//err = log(err);
 }
 
 bool loadOBJFile(const char* f_name)
@@ -365,6 +368,7 @@ void simplify(double ratio)
 	while (turn++ < number)
 	{
 		//cout << turn << endl;
+		//cout << turn << " " << BST.size() << endl;
 		int min_err_edge_id;
 		while (1)
 		{
@@ -418,8 +422,8 @@ void simplify(double ratio)
 			Edge& e = edges_pool[update_edges[i]];
 			if(!e.enable)
 				continue;
-			e.updateNewPoint();
 			BST.erase(Node(update_edges[i]));
+			e.updateNewPoint();
 			e.updateErr();
 			BST.insert(Node(update_edges[i]));
 		}
